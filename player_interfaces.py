@@ -5,8 +5,6 @@ from game import reason_piece_at_location_cant_move, locations_of_pieces_with_va
 
 X_CHARS = "hgfedcba"
 
-class InvalidLocationString(Exception):
-    """Custom exception for when player input doesn't parse into a board location."""
 
 def print_board(board):
     print()
@@ -52,6 +50,10 @@ def get_choice_from_stdin(options, option_to_str):
         else:
             return options[integer - 1]
 
+# <DEFUNCT>
+class InvalidLocationString(Exception):
+    """Custom exception for when player input doesn't parse into a board location."""
+
 def parse_location_from_str(s):
     # TODO Provide better feedback about reasons for problems.
     s = s.strip()
@@ -69,7 +71,6 @@ def parse_location_from_str(s):
         raise InvalidLocationString()
     return (x, y)
 
-# <DEFUNCT>
 def get_move_from_stdin_old_style(active_player, board):
     location_of_piece_to_move = None
     reason_cant_move = "Select a piece to move."
