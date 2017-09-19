@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 class MoveDir(Enum):
     LEFT = -1
     RIGHT = 1
@@ -60,10 +59,11 @@ def starting_square(x, y):
     else:
         return Square.EMPTY
 
-STARTING_BOARD = tuple(tuple(starting_square(x, y) for x in range(8)) for y in range(8))
+def make_board(make_square):
+    """Returns a board where make_square defines the contents of each square"""
+    return tuple(tuple(make_square(x, y) for x in range(8)) for y in range(8))
 
-def next_board(next_square_function, board):
-    return tuple(tuple(next_square_function(x, y) for x in range(len(board[y]))) for y in range(len(board)))
+STARTING_BOARD = make_board(starting_square)
 
 def square_is(location, query, board):
     """Checks if the piece at location equals query. Returns false if location is out of bounds."""
@@ -75,6 +75,7 @@ def square_is(location, query, board):
     return board[y][x] is query
 
 def do_simple_move(direction, starting_location, player, board):
+    """Returns the board that results from player making a simple move in direction with a piece at starting_location"""
     mover_x, mover_y = starting_location
     # Move one square diagonally
     mover_x += direction.value
@@ -90,9 +91,10 @@ def do_simple_move(direction, starting_location, player, board):
         else:
             return board[y][x]
 
-    return next_board(next_board_square, board)
+    return make_board(next_board_square)
 
 def do_jumps(jumps, starting_location, player, board):
+    """Returns the board that results from player making jumps with a piece at starting_location"""
     jumper_x, jumper_y = starting_location
     enemy_piece_locations = []
     for jump in jumps:
@@ -118,12 +120,13 @@ def do_jumps(jumps, starting_location, player, board):
         else:
             return board[y][x]
 
-    new_board = next_board(next_board_square, board)
+    new_board = make_board(next_board_square)
     if board_has_potential_jumps(new_board, player):
         raise MoreJumpsRequired()
     return new_board
 
 def do_move(move, starting_location, player, board):
+    """Returns the board that results from active_player making move with a piece at starting_location"""
     # move might be a simple move or a series of jumps.
     if isinstance(move, MoveDir):
         return do_simple_move(move, starting_location, player, board)
@@ -163,13 +166,30 @@ def possible_jumps(location, player, board):
     return valid_jumps
 
 def board_has_potential_jumps(board, active_player):
+    """Returns True iff the board has a piece for active_player that can jump over an enemy"""
     for y in range(len(board)):
         for x in range(len(board[y])):
             if board[y][x] is active_player.my_square and possible_jumps((x, y), active_player, board):
                 return True
     return False
 
+def possible_moves(location, active_player, board):
+    """Returns a list of (location, active_player, move) tuples, where move is either
+    a MoveDir representing a simple move, or a list of MoveDirs, representing a series of jumps"""
+    # WARNING: Does not check for whether another piece must be moved!
+    results = []
+    jumps = possible_jumps(location, active_player, board)
+    if jumps:
+        for jump_option in jumps:
+            results.append((location, active_player, jump_option))
+    else:
+        moves = possible_simple_moves(location, active_player, board)
+        for move in moves:
+            results.append((location, active_player, move))
+    return results
+
 def reason_piece_at_location_cant_move(location, active_player, board):
+    """Returns either None or a string explaining why location doesn't have a piece active_player can move"""
     if location is None:
         return "You didn't select a piece."
     if board[location[1]][location[0]] == Square.EMPTY:
@@ -185,20 +205,8 @@ def reason_piece_at_location_cant_move(location, active_player, board):
         return "That piece has no valid moves."
     return None
 
-def possible_moves(location, active_player, board):
-    # WARNING: Does not check for whether another piece must be moved!
-    results = []
-    jumps = possible_jumps(location, active_player, board)
-    if jumps:
-        for jump_option in jumps:
-            results.append((location, active_player, jump_option))
-    else:
-        moves = possible_simple_moves(location, active_player, board)
-        for move in moves:
-            results.append((location, active_player, move))
-    return results
-
 def locations_of_pieces_with_valid_moves(active_player, board):
+    """Returns a list of (x,y) tuples for each location on the board that has a piece active_player can move"""
     results = []
     for y in range(len(board)):
         for x in range(len(board[y])):

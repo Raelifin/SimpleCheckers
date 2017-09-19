@@ -3,7 +3,6 @@ import random
 from game import MoveDir, Player, GameOver
 from game import reason_piece_at_location_cant_move, locations_of_pieces_with_valid_moves, possible_moves
 
-
 X_CHARS = "hgfedcba"
 
 class InvalidLocationString(Exception):
