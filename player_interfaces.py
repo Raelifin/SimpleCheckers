@@ -1,5 +1,7 @@
-from game import MoveDir, Player
-from game import reason_piece_at_location_cant_move, possible_moves
+import random
+
+from game import MoveDir, Player, GameOver
+from game import reason_piece_at_location_cant_move, locations_of_pieces_with_valid_moves, possible_moves
 
 
 X_CHARS = "hgfedcba"
@@ -68,7 +70,8 @@ def parse_location_from_str(s):
         raise InvalidLocationString()
     return (x, y)
 
-def get_move_from_stdin(active_player, board):
+# <DEFUNCT>
+def get_move_from_stdin_old_style(active_player, board):
     location_of_piece_to_move = None
     reason_cant_move = "Select a piece to move."
     while reason_cant_move:
@@ -80,3 +83,20 @@ def get_move_from_stdin(active_player, board):
             reason_cant_move = "That's not a valid square. Try something like \"h6\"..."
     options = possible_moves(location_of_piece_to_move, active_player, board)
     return get_choice_from_stdin(options, pretty_move_str)
+# </DEFUNCT
+
+def get_move_from_stdin(active_player, board):
+    piece_location_options = locations_of_pieces_with_valid_moves(active_player, board)
+    if not piece_location_options:
+        raise GameOver()
+    location_of_piece_to_move = get_choice_from_stdin(piece_location_options, pretty_location_str)
+    move_options = possible_moves(location_of_piece_to_move, active_player, board)
+    return get_choice_from_stdin(move_options, pretty_move_str)
+
+def get_move_randomly(active_player, board):
+    piece_location_options = locations_of_pieces_with_valid_moves(active_player, board)
+    if not piece_location_options:
+        raise GameOver()
+    location_of_piece_to_move = random.choice(piece_location_options)
+    move_options = possible_moves(location_of_piece_to_move, active_player, board)
+    return random.choice(move_options)

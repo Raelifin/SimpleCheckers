@@ -46,6 +46,9 @@ class MoreJumpsRequired(Exception):
     """Custom exception for when a piece can make a jump,
     but it must keep jumping for the jump sequence to be valid."""
 
+class GameOver(Exception):
+    """The game is over because the active player cannot move!"""
+
 def starting_square(x, y):
     """Returns the contents of a given square for the starting board state"""
     if (x + y) % 2 == 0:
@@ -183,6 +186,7 @@ def reason_piece_at_location_cant_move(location, active_player, board):
     return None
 
 def possible_moves(location, active_player, board):
+    # WARNING: Does not check for whether another piece must be moved!
     results = []
     jumps = possible_jumps(location, active_player, board)
     if jumps:
@@ -192,4 +196,12 @@ def possible_moves(location, active_player, board):
         moves = possible_simple_moves(location, active_player, board)
         for move in moves:
             results.append((location, active_player, move))
+    return results
+
+def locations_of_pieces_with_valid_moves(active_player, board):
+    results = []
+    for y in range(len(board)):
+        for x in range(len(board[y])):
+            if reason_piece_at_location_cant_move((x, y), active_player, board) is None:
+                results.append((x, y))
     return results
