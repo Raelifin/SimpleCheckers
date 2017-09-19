@@ -20,7 +20,7 @@ class Square(Enum):
         else:
             return " "
 
-def startingSquare(x, y):
+def starting_square(x, y):
     """Returns the contents of a given square for the starting board state"""
     if (x + y) % 2 == 0:
         return Square.EMPTY
@@ -31,15 +31,15 @@ def startingSquare(x, y):
     else:
         return Square.EMPTY
 
-def showBoard(board):
+def show_board(board):
     for y in range(len(board)):
         row = board[y]
         print("{}|{}".format(y + 1, "".join([str(square) for square in row])))
     print("  hgfedcba")
 
-startingBoard = [[startingSquare(x, y) for x in range(8)] for y in range(8)]
-activePlayer = Player.RED
+starting_board = [[starting_square(x, y) for x in range(8)] for y in range(8)]
+active_player = Player.RED
 
-showBoard(startingBoard)
+show_board(starting_board)
 print()
-print("{}'s turn".format(activePlayer))
+print("{}'s turn".format(active_player))
