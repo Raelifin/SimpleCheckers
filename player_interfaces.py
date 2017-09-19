@@ -1,5 +1,5 @@
 from game import MoveDir, Player
-from game import can_move_piece_at_location, possible_moves
+from game import reason_piece_at_location_cant_move, possible_moves
 
 
 X_CHARS = "hgfedcba"
@@ -69,12 +69,14 @@ def parse_location_from_str(s):
     return (x, y)
 
 def get_move_from_stdin(active_player, board):
-    print("Select a piece to move.")
     location_of_piece_to_move = None
-    while not can_move_piece_at_location(location_of_piece_to_move, active_player, board, print_reasons=True):
+    reason_cant_move = "Select a piece to move."
+    while reason_cant_move:
+        print(reason_cant_move)
         try:
             location_of_piece_to_move = parse_location_from_str(input("> "))
+            reason_cant_move = reason_piece_at_location_cant_move(location_of_piece_to_move, active_player, board)
         except InvalidLocationString:
-            print("That's not a valid square. Try something like \"h6\"...")
+            reason_cant_move = "That's not a valid square. Try something like \"h6\"..."
     options = possible_moves(location_of_piece_to_move, active_player, board)
     return get_choice_from_stdin(options, pretty_move_str)

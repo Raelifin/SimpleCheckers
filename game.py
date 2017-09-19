@@ -166,29 +166,21 @@ def board_has_potential_jumps(board, active_player):
                 return True
     return False
 
-def can_move_piece_at_location(location, active_player, board, print_reasons=False):
+def reason_piece_at_location_cant_move(location, active_player, board):
     if location is None:
-        return False  # Don't even bother giving a reason
+        return "You didn't select a piece."
     if board[location[1]][location[0]] == Square.EMPTY:
-        if print_reasons:
-            print("That square is empty.")
-        return False
+        return "That square is empty."
     if board[location[1]][location[0]] is not active_player.my_square:
-        if print_reasons:
-            print("That piece doesn't belong to {}.".format(active_player))
-        return False
+        return "That piece doesn't belong to {}.".format(active_player)
     must_jump = board_has_potential_jumps(board, active_player)
     this_piece_jumps = possible_jumps(location, active_player, board)
     if must_jump and not this_piece_jumps:
-        if print_reasons:
-            print("{} must jump, and that piece is not a valid jumper.".format(active_player))
-        return False
+        return "{} must jump, and that piece is not a valid jumper.".format(active_player)
     this_piece_simple_moves = possible_simple_moves(location, active_player, board)
     if not this_piece_simple_moves and not this_piece_jumps:
-        if print_reasons:
-            print("That piece has no valid moves.")
-        return False
-    return True
+        return "That piece has no valid moves."
+    return None
 
 def possible_moves(location, active_player, board):
     results = []
