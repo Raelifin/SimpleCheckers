@@ -5,8 +5,8 @@ from game import reason_piece_at_location_cant_move, locations_of_pieces_with_va
 
 X_CHARS = "hgfedcba"
 
-
 def print_board(board):
+    """Prints a nice version of the board to StdOut"""
     print()
     for y in range(len(board)):
         row = board[y]
