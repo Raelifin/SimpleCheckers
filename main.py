@@ -145,9 +145,16 @@ def do_jumps(jumps, starting_location, player, board):
             return board[y][x]
 
     new_board = next_board(next_board_square, board)
-    if board_has_potential_jumps(new_board):
+    if board_has_potential_jumps(new_board, player):
         raise MoreJumpsRequired()
     return new_board
+
+def do_move(move, starting_location, player, board):
+    # move might be a simple move or a series of jumps.
+    if isinstance(move, MoveDir):
+        return do_simple_move(move, starting_location, player, board)
+    else:
+        return do_jumps(move, starting_location, player, board)
 
 def possible_simple_moves(location, player, board):
     """Returns a list of valid simple moves that the piece at location can make.
@@ -160,6 +167,7 @@ def possible_simple_moves(location, player, board):
             # If we get this far it means our move was successful
             valid_moves.append(move)
         except InvalidMove:
+            # print(move, "for", location, "and", player, "was invalid!")
             pass
     return valid_moves
 
@@ -212,11 +220,52 @@ def can_move_piece_at_location(location, active_player, board, print_reasons=Fal
     return True
 
 def possible_moves(location, active_player, board):
+    results = []
     jumps = possible_jumps(location, active_player, board)
     if jumps:
-        return jumps
+        for jump_option in jumps:
+            results.append((location, active_player, jump_option))
     else:
-        return possible_simple_moves(location, active_player, board)
+        moves = possible_simple_moves(location, active_player, board)
+        for move in moves:
+            results.append((location, active_player, move))
+    return results
+
+def pretty_location_str(location):
+    x, y = location
+    return X_CHARS[x] + str(y + 1)
+
+def pretty_move_str(move):
+    location, player, move_specifics = move
+    if isinstance(move_specifics, MoveDir):
+        new_x = location[0] + move_specifics.value
+        new_y = location[1] + player.value
+        return pretty_location_str(location) + " -> " + pretty_location_str((new_x, new_y))
+    else:
+        # Is a sequence of jumps!
+        s = pretty_location_str(location)
+        x, y = location
+        for jump in move_specifics:
+            # Jump two squares diagonally
+            x += jump.value * 2
+            y += player.value
+            s += " -> " + pretty_location_str((x, y))
+        return s
+
+def get_choice_from_stdin(options, option_to_str):
+    # TODO: Add the ability to say nevermind by selecting "0"
+    print("Valid options are:")
+    for i in range(len(options)):
+        print("\t{}: {}".format(i + 1, option_to_str(options[i])))
+    while True:
+        try:
+            integer = int(input("> "))
+        except ValueError:
+            print("That's not a valid number.")
+        if integer < 1 or integer > len(options):
+            print("Please input a number in the range 1 to {}.".format(len(options)))
+        else:
+            return options[integer - 1]
 
 def get_move_from_stdin(active_player, board):
     print("Select a piece to move.")
@@ -227,7 +276,7 @@ def get_move_from_stdin(active_player, board):
         except InvalidLocationString:
             print("That's not a valid square. Try something like \"h6\"...")
     options = possible_moves(location_of_piece_to_move, active_player, board)
-    print(options)
+    return get_choice_from_stdin(options, pretty_move_str)
 
 def main():
     board = STARTING_BOARD
@@ -238,9 +287,13 @@ def main():
     print("O = Black's pieces")
     print("The rules have been simplified for your convenience! Good luck!")
 
-    print_board(board)
-    print("{}'s turn".format(active_player))
-    move = get_move_from_stdin(active_player, board)
+    while True:
+        print_board(board)
+        print("{}'s turn".format(active_player))
+        piece_loc, player, move = get_move_from_stdin(active_player, board)
+
+        board = do_move(move, piece_loc, player, board)
+        active_player = active_player.enemy
 
 if __name__ == '__main__':
     main()
